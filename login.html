@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Meraki System</title>
+    <title>Login - System</title>
     <link rel="stylesheet" href="style.css">
     <style>
         .password-wrapper {
@@ -47,8 +47,8 @@
 
     <div class="login-wrapper">
         <div class="login-header">
-            <span class="logo-icon">🔵🟡⚪</span>
-            <h2><strong>Meraki</strong> Teacher Workload & Burnout Risk Management System</h2>
+            <span class="logo-icon">🔵🔴🟡</span>
+            <h2>Teacher Workload & Burnout Risk Management System</h2>
         </div>
 
         <form class="login-form" id="loginForm" autocomplete="on">
@@ -73,7 +73,7 @@
                 <option value="principal">Principal Dashboard</option>
             </select>
 
-            <button type="submit" class="login-submit-btn">Log In to Meraki</button>
+            <button type="submit" class="login-submit-btn">Log In</button>
             <a href="#" class="forgot-password">Need help logging in?</a>
             <p style="text-align: center; margin-top: 1rem; font-size: 0.95rem;">
                 Don't have an account? <a href="register.html" style="color: var(--primary); font-weight: 600;">Sign
@@ -128,11 +128,11 @@
                     window.location.href = 'principal.html';
                 } else {
                     alert('Please select a valid role.');
-                    submitBtn.textContent = "Log In to Meraki";
+                    submitBtn.textContent = "Log In";
                 }
             } catch (error) {
                 alert("Login Failed. Please check your credentials.");
-                submitBtn.textContent = "Log In to Meraki";
+                submitBtn.textContent = "Log In";
             }
         });
     </script>
