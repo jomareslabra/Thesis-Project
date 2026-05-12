@@ -7,7 +7,7 @@
     <title>Burnout Risk Assessment - Meraki</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Extra styles specifically for the clean Likert scale forms */
+        /* Specific layouts for clean Likert scale forms */
         .rubric-section {
             margin-bottom: 2.5rem;
         }
@@ -44,6 +44,15 @@
             font-family: inherit;
             font-size: 0.95rem;
             background-color: var(--bg-card);
+            color: var(--text-main);
+        }
+
+        .question-group input[readonly] {
+            background-color: #e2e8f0;
+            cursor: not-allowed;
+            border-color: #cbd5e1;
+            color: var(--text-muted);
+            font-weight: 600;
         }
 
         .subcategory {
@@ -53,6 +62,16 @@
             color: var(--text-muted);
             margin-bottom: 1rem;
             letter-spacing: 0.5px;
+        }
+
+        .assigned-summary-box {
+            background-color: #eff6ff;
+            border: 1px solid #bfdbfe;
+            padding: 0.85rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: #1e3a8a;
         }
     </style>
 </head>
@@ -90,20 +109,29 @@
 
                         <div class="question-group">
                             <label>1. Total Instructional Minutes per week:</label>
-                            <input type="number" id="a1_mins" value="1800" min="0" required>
-                            <small style="color: var(--text-muted); display: block; margin-top: 0.5rem;">Baseline is
-                                1,800 mins. Overloads trigger penalties.</small>
+                            <input type="number" id="a1_mins" value="0" readonly required>
+                            <small style="color: var(--primary); font-weight: 600; display: block; margin-top: 0.5rem;">
+                                🔒 Automatically synced with official DepEd workloads assigned by your Principal.
+                                Baseline is 1,800 mins.
+                            </small>
                         </div>
 
                         <div class="question-group">
                             <label>2. Number of distinct subjects/academic preparations:</label>
                             <input type="number" id="a2_preps" value="1" min="1" required>
-                            <small style="color: var(--text-muted); display: block; margin-top: 0.5rem;">Baseline is
-                                1-2. Extra distinct subjects trigger penalties.</small>
+                            <small style="color: var(--text-muted); display: block; margin-top: 0.5rem;">
+                                Pre-loaded based on total assigned class sections. Adjust if multiple sections share an
+                                identical academic preparation.
+                            </small>
                         </div>
 
                         <div class="question-group">
                             <label>3. Heaviest Administrative or Ancillary Role currently held:</label>
+
+                            <div class="assigned-summary-box" id="assignedRolesContainer">
+                                <strong>Assigned Server Designations:</strong> Loading structural data...
+                            </div>
+
                             <select id="a3_admin" required>
                                 <option value="0">None</option>
                                 <option value="5">Light Role (e.g., Club Moderator, Committee Member)</option>
@@ -275,29 +303,88 @@
     </main>
 
     <script type="module">
-        import { app } from "./Meraki_Firebase.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        // Import explicit absolute constant mapping alongside client instances
+        import { supabase, supabaseUrl, supabaseAnonKey } from "./Meraki_Supabase.js";
 
-        const auth = getAuth(app);
-        const db = getFirestore(app);
         let currentUser = null;
+        let globalAccessToken = null;
 
-        // Security Guard
-        onAuthStateChanged(auth, (user) => {
-            if (!user) {
+        // Session validation loop & structural baseline mapping via native transport pipelines
+        supabase.auth.onAuthStateChange(async (event, session) => {
+            if (!session) {
                 window.location.replace("login.html");
-            } else {
-                currentUser = user;
+                return;
+            }
+            currentUser = session.user;
+            globalAccessToken = session.access_token;
+
+            try {
+                // Fetch complete active profile parameters straight from PostgreSQL edge nodes
+                const baselineEndpoint = `${supabaseUrl}/rest/v1/profiles?id=eq.${currentUser.id}&select=*`;
+
+                const res = await fetch(baselineEndpoint, {
+                    method: 'GET',
+                    headers: {
+                        'apikey': supabaseAnonKey,
+                        'Authorization': `Bearer ${globalAccessToken}`
+                    }
+                });
+
+                if (res.ok) {
+                    const profileRows = await res.json();
+                    if (profileRows && profileRows.length > 0) {
+                        const profileData = profileRows[0];
+
+                        // 1. Sync Part A Q1: Enforce Principal-assigned Instructional Minutes directly
+                        const assignedMinutes = profileData.totalInstructionalMinutes || 0;
+                        document.getElementById('a1_mins').value = assignedMinutes > 0 ? assignedMinutes : 1800;
+
+                        // 2. Sync Part A Q2: Derive preparation estimates off active teaching load constraints
+                        const structuralSections = profileData.teachingLoad || [];
+                        if (structuralSections.length > 0) {
+                            document.getElementById('a2_preps').value = Math.max(1, Math.min(structuralSections.length, 4));
+                        }
+
+                        // 3. Sync Part A Q3 Summary layout: Expose assigned server arrays transparently
+                        const adminRolesList = profileData.adminRoles || [];
+                        const ancillaryList = profileData.ancillaryDuties || [];
+                        const combinedRoles = [...adminRolesList, ...ancillaryList];
+
+                        const summaryContainer = document.getElementById('assignedRolesContainer');
+                        if (combinedRoles.length > 0) {
+                            summaryContainer.innerHTML = `<strong>Assigned Server Designations:</strong> ${combinedRoles.join(', ')}`;
+
+                            // Automatically infer suitable baseline drop-down selections if heavily structured
+                            const rolesString = combinedRoles.join(' ').toLowerCase();
+                            const adminSelectNode = document.getElementById('a3_admin');
+                            if (rolesString.includes('chair') || rolesString.includes('coordinator') || rolesString.includes('head')) {
+                                adminSelectNode.value = "20"; // Heavy default mapping
+                            } else if (rolesString.includes('adviser')) {
+                                adminSelectNode.value = "10"; // Medium default mapping
+                            } else {
+                                adminSelectNode.value = "5"; // Light default mapping
+                            }
+                        } else {
+                            summaryContainer.innerHTML = `<strong>Assigned Server Designations:</strong> No administrative duties registered server-side.`;
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error("Baseline extraction exception:", err);
             }
         });
 
-        // The 120-Point Expert System Engine
+        // Expert System Computation backed by direct REST mutation logic
         document.getElementById('assessmentForm').addEventListener('submit', async function (e) {
             e.preventDefault();
-            if (!currentUser) return;
+
+            if (!currentUser || !globalAccessToken) {
+                alert("Session context missing. Please reload the dashboard view.");
+                return;
+            }
 
             const btn = document.querySelector('.save-profile-btn');
+            const originalText = btn.innerHTML;
             btn.innerHTML = 'Executing Expert System Algorithm... ⏳';
             btn.style.opacity = '0.7';
             btn.disabled = true;
@@ -305,38 +392,31 @@
             // --- CALCULATE PART A (Max 60 pts) ---
             let partAScore = 0;
 
-            // 1. Instructional Load (Max 20 pts)
-            const mins = parseInt(document.getElementById('a1_mins').value);
+            const mins = parseInt(document.getElementById('a1_mins').value) || 0;
             if (mins > 1800) {
                 const overloadBlocks = Math.floor((mins - 1800) / 60);
                 partAScore += Math.min(20, overloadBlocks * 10);
             }
 
-            // 2. Academic Preps (Max 15 pts)
-            const preps = parseInt(document.getElementById('a2_preps').value);
+            const preps = parseInt(document.getElementById('a2_preps').value) || 1;
             if (preps > 2) {
                 const extraPreps = preps - 2;
                 partAScore += Math.min(15, extraPreps * 5);
             }
 
-            // 3. Admin Duties (Max 25 pts) - Pulled from dropdown value
-            const adminPoints = parseInt(document.getElementById('a3_admin').value);
+            const adminPoints = parseInt(document.getElementById('a3_admin').value) || 0;
             partAScore += adminPoints;
 
-            // Ensure Part A doesn't somehow exceed 60
             partAScore = Math.min(60, partAScore);
 
             // --- CALCULATE PART B (Max 60 pts) ---
             let partBScore = 0;
 
-            // Reverse Scored Items (Q1-Q3)
             const reverseItems = document.querySelectorAll('.mbi-reverse');
             reverseItems.forEach(item => {
-                // Formula: 5 - Input (If they answer 4, they get 1 penalty point. If they answer 1, they get 4)
                 partBScore += (5 - parseInt(item.value));
             });
 
-            // Standard Scored Items (Q4-Q15)
             const standardItems = document.querySelectorAll('.mbi-standard');
             standardItems.forEach(item => {
                 partBScore += parseInt(item.value);
@@ -346,29 +426,48 @@
             const totalScore = partAScore + partBScore;
 
             let calculatedRisk = "Low";
+            let triggerReviewFlag = false;
+
             if (totalScore >= 91) {
                 calculatedRisk = "High";
+                triggerReviewFlag = true; // High classification initiates workload review triggers natively
             } else if (totalScore >= 56) {
                 calculatedRisk = "Moderate";
             }
 
             try {
-                // Save to Firebase
-                await setDoc(doc(db, "users", currentUser.uid), {
-                    assessmentScore: totalScore,
-                    partAScore: partAScore,
-                    partBScore: partBScore,
-                    riskLevel: calculatedRisk,
-                    lastAssessmentDate: new Date()
-                }, { merge: true });
+                // Execute un-deadlockable native PostgREST mutation payload
+                const targetCommitEndpoint = `${supabaseUrl}/rest/v1/profiles?id=eq.${currentUser.id}`;
 
-                // Redirect to dashboard
+                const response = await fetch(targetCommitEndpoint, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': supabaseAnonKey,
+                        'Authorization': `Bearer ${globalAccessToken}`
+                    },
+                    body: JSON.stringify({
+                        assessmentScore: totalScore,
+                        partAScore: partAScore,
+                        partBScore: partBScore,
+                        riskLevel: calculatedRisk,
+                        needsLoadRebalance: triggerReviewFlag,
+                        lastAssessmentDate: new Date().toISOString()
+                    })
+                });
+
+                if (!response.ok) {
+                    const serverRejection = await response.json();
+                    throw new Error(serverRejection.message || `Database validation exception (HTTP ${response.status})`);
+                }
+
+                // Redirect instantly back to dashboard display metrics
                 window.location.href = 'dashboard.html';
 
             } catch (error) {
-                console.error("Error saving assessment:", error);
-                alert("Failed to save assessment. Please check console.");
-                btn.innerHTML = 'Calculate 120-Point Meraki Score';
+                console.error("Analytical score commit error:", error);
+                alert("Database Update Dropped:\n" + error.message);
+                btn.innerHTML = originalText;
                 btn.style.opacity = '1';
                 btn.disabled = false;
             }

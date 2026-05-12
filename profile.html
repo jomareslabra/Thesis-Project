@@ -31,7 +31,6 @@
             </div>
 
             <div class="profile-card-body">
-                <!-- Core Info Grid (now includes Employee ID & Learning Area) -->
                 <div class="teacher-info-grid">
                     <div class="info-item">
                         <span class="info-label">Name:</span>
@@ -57,7 +56,6 @@
 
                 <hr class="divider">
 
-                <!-- Workload Section (Read‑Only) -->
                 <div class="workload-lists">
                     <div class="workload-section">
                         <h3>📋 Teaching Load <span style="font-size:0.8rem; color:var(--text-muted);">(Assigned by
@@ -95,7 +93,6 @@
                     </div>
                 </div>
 
-                <!-- Edit Button (only opens demographic editor) -->
                 <div class="profile-actions">
                     <button class="save-profile-btn" id="editProfileBtn">Edit Demographics</button>
                 </div>
@@ -104,7 +101,6 @@
 
     </main>
 
-    <!-- Edit Modal (Teacher‑Owned Demographics Only) -->
     <div id="editModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" id="closeModal">&times;</span>
@@ -135,11 +131,12 @@
     </div>
 
     <script type="module">
-        // 🔁 Supabase client
-        import { supabase } from "./Meraki_Supabase.js";
+        // 🔁 Supabase client initialization (Import absolute strings alongside client)
+        import { supabase, supabaseUrl, supabaseAnonKey } from "./Meraki_Supabase.js";
 
-        // Global user reference
+        // Global variables to completely sidestep SDK promise lockups
         let currentUser = null;
+        let globalAccessToken = null;
 
         // DOM elements
         const modal = document.getElementById("editModal");
@@ -147,12 +144,12 @@
         const closeBtn = document.getElementById("closeModal");
         const editForm = document.getElementById("editForm");
 
-        // Modal open / close
+        // Modal open / close logic
         editBtn.onclick = () => { modal.style.display = "flex"; };
         closeBtn.onclick = () => { modal.style.display = "none"; };
         window.onclick = (event) => { if (event.target == modal) modal.style.display = "none"; };
 
-        // Auth guard & data fetch
+        // Auth guard & real-time token extraction
         supabase.auth.onAuthStateChange(async (event, session) => {
             if (!session) {
                 window.location.replace("login.html");
@@ -160,11 +157,18 @@
             }
 
             currentUser = session.user;
+            globalAccessToken = session.access_token; // Instantly grab the verified JWT string
+
+            // Expose globally for background debugging support
+            window.supabase = supabase;
+            window.currentUser = currentUser;
+
             await loadProfile(currentUser.id);
         });
 
         async function loadProfile(uid) {
             try {
+                // Read queries execute perfectly through standard client calls
                 const { data: profile, error } = await supabase
                     .from('profiles')
                     .select('*')
@@ -176,66 +180,77 @@
                     return;
                 }
 
-                // Populate display fields
-                document.getElementById("displayName").textContent = profile.name || "N/A";
-                document.getElementById("displayEmployeeId").textContent = profile.employeeId || "—";
-                document.getElementById("displayPosition").textContent = profile.position || "N/A";
-                document.getElementById("displayLearningArea").textContent = profile.learningArea || "—";
-                document.getElementById("displaySpec").textContent = profile.specialization || "N/A";
+                // Render metrics cleanly
+                updateInterfaceNodes(profile);
 
-                // Populate modal inputs
-                document.getElementById("inputName").value = profile.name || "";
-                document.getElementById("inputEmployeeId").value = profile.employeeId || "";
-                document.getElementById("inputPosition").value = profile.position || "";
-                document.getElementById("inputLearningArea").value = profile.learningArea || "";
-                document.getElementById("inputSpec").value = profile.specialization || "";
-
-                // Workload (read-only) – now arrays directly from PostgreSQL
-                const teachingArr = profile.teachingLoad || [];
-                const adminArr = profile.adminRoles || [];
-                const ancillaryArr = profile.ancillaryDuties || [];
-
-                function renderList(arr, elementId, emptyMsg) {
-                    const ul = document.getElementById(elementId);
-                    ul.innerHTML = "";
-                    if (arr.length === 0) {
-                        ul.innerHTML = `<li>${emptyMsg}</li>`;
-                    } else {
-                        arr.forEach(item => {
-                            const li = document.createElement('li');
-                            li.textContent = item;
-                            ul.appendChild(li);
-                        });
-                    }
-                }
-
-                renderList(teachingArr, "displayTeaching", "No teaching load assigned.");
-                renderList(adminArr, "displayAdmin", "No admin roles assigned.");
-                renderList(ancillaryArr, "displayAncillary", "No ancillary duties assigned.");
-
-                // Total Instructional Minutes
-                document.getElementById("displayMinutes").textContent =
-                    (profile.totalInstructionalMinutes || 0) + " minutes";
-
-                // Rebalance flag
-                document.getElementById("displayRebalance").textContent =
-                    profile.needsLoadRebalance ? "⚠️ Yes (Urgent workload review needed)" : "✅ No";
             } catch (err) {
                 console.error("Profile load error:", err);
             }
         }
 
-        // Save demographics (robust, heavily-traced version)
+        // Centralized helper function to map object representations to interface displays
+        function updateInterfaceNodes(profileData) {
+            // Populate display metrics
+            document.getElementById("displayName").textContent = profileData.name || "N/A";
+            document.getElementById("displayEmployeeId").textContent = profileData.employeeId || "—";
+            document.getElementById("displayPosition").textContent = profileData.position || "N/A";
+            document.getElementById("displayLearningArea").textContent = profileData.learningArea || "—";
+            document.getElementById("displaySpec").textContent = profileData.specialization || "N/A";
+
+            // Populate form nodes to guarantee clean state synchronization
+            document.getElementById("inputName").value = profileData.name || "";
+            document.getElementById("inputEmployeeId").value = profileData.employeeId || "";
+            document.getElementById("inputPosition").value = profileData.position || "";
+            document.getElementById("inputLearningArea").value = profileData.learningArea || "";
+            document.getElementById("inputSpec").value = profileData.specialization || "";
+
+            // Workload array population
+            const teachingArr = profileData.teachingLoad || [];
+            const adminArr = profileData.adminRoles || [];
+            const ancillaryArr = profileData.ancillaryDuties || [];
+
+            function renderList(arr, elementId, emptyMsg) {
+                const ul = document.getElementById(elementId);
+                ul.innerHTML = "";
+                if (arr.length === 0) {
+                    ul.innerHTML = `<li>${emptyMsg}</li>`;
+                } else {
+                    arr.forEach(item => {
+                        const li = document.createElement('li');
+                        li.textContent = item;
+                        ul.appendChild(li);
+                    });
+                }
+            }
+
+            renderList(teachingArr, "displayTeaching", "No teaching load assigned.");
+            renderList(adminArr, "displayAdmin", "No admin roles assigned.");
+            renderList(ancillaryArr, "displayAncillary", "No ancillary duties assigned.");
+
+            // Instructional Baseline
+            document.getElementById("displayMinutes").textContent =
+                (profileData.totalInstructionalMinutes || 0) + " minutes";
+
+            // Review Badge Alert
+            document.getElementById("displayRebalance").textContent =
+                profileData.needsLoadRebalance ? "⚠️ Yes (Urgent workload review needed)" : "✅ No";
+        }
+
+        // Un-deadlockable Direct REST Submission paired with Memory Injection
         editForm.onsubmit = async function (event) {
             event.preventDefault();
-            console.log('🚀 [Submit] Handler triggered.');
 
             const saveBtn = editForm.querySelector('.save-profile-btn');
-            const originalBtnText = saveBtn.textContent;
-            saveBtn.textContent = "Saving... ⏳";
+            const originalText = saveBtn.textContent;
+            saveBtn.textContent = "Saving to Database... ⏳";
             saveBtn.disabled = true;
 
-            // Grab inputs
+            if (!currentUser || !globalAccessToken) {
+                alert('Authentication session mapping missing. Please reload the page.');
+                resetButton();
+                return;
+            }
+
             const name = document.getElementById("inputName").value.trim();
             const employeeId = document.getElementById("inputEmployeeId").value.trim();
             const position = document.getElementById("inputPosition").value.trim();
@@ -249,65 +264,56 @@
             }
 
             try {
-                // 1. Force check the session status FIRST to prevent PostgREST pre-flight deadlocks
-                console.log('🔐 [Submit] Verifying Auth Session lock...');
-                const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+                // 1. Consume pure exported URL string directly
+                const targetEndpoint = `${supabaseUrl}/rest/v1/profiles?id=eq.${currentUser.id}`;
 
-                if (sessionError || !sessionData.session) {
-                    throw new Error("Authentication session is stale or missing. Please log in again.");
-                }
-                console.log('✅ [Submit] Auth Token ready for UID:', sessionData.session.user.id);
+                // Fire a low-level browser PATCH transaction directly to PostgREST
+                const response = await fetch(targetEndpoint, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=representation',
+                        'apikey': supabaseAnonKey, // 2. Consume pure exported Key string directly
+                        'Authorization': `Bearer ${globalAccessToken}`
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        employeeId: employeeId || null,
+                        position: position,
+                        learningArea: learningArea || null,
+                        specialization: spec
+                    })
+                });
 
-                // Payload payload preparation
-                const updatePayload = {
-                    name: name,
-                    employeeId: employeeId || null,
-                    position: position,
-                    learningArea: learningArea || null,
-                    specialization: spec
-                };
-                console.log('📦 [Submit] Payload prepared:', updatePayload);
-
-                // 2. Execute the Supabase call with explicit chain logging
-                console.log('🌐 [Submit] Firing PATCH request to Supabase...');
-
-                const { data, error } = await supabase
-                    .from('profiles')
-                    .update(updatePayload)
-                    .eq('id', sessionData.session.user.id)
-                    .select(); // Using .select() confirms if RLS blocks the return row
-
-                // If execution reaches here, the promise resolved!
-                console.log('📥 [Submit] Supabase Promise Resolved.');
-
-                if (error) {
-                    // Explicit PostgREST or Trigger execution failure
-                    console.error('❌ [Supabase Error]:', error);
-                    throw error;
+                if (!response.ok) {
+                    const serverError = await response.json();
+                    throw new Error(serverError.message || `HTTP ${response.status}: Write Operation Rejected`);
                 }
 
-                console.log('🎉 [Submit] Update Successful! Returned Data:', data);
-                alert("Demographics updated successfully!");
+                // Capture returned row representation directly from the PostgREST network stream
+                const returnedArray = await response.json();
 
-                // Hide modal and reload UI data
-                modal.style.display = "none";
-                await loadProfile(sessionData.session.user.id);
+                if (returnedArray && returnedArray.length > 0) {
+                    // Instantly inject verified database memory straight into your interface elements
+                    updateInterfaceNodes(returnedArray[0]);
 
-            } catch (err) {
-                // Forcefully catch ANY JavaScript halt, RLS exception, or deadlocked await rejection
-                console.error("🚨 [Submit Fatal Catch]:", err);
-                alert("Update Failed:\n" + (err.message || JSON.stringify(err)));
+                    modal.style.display = "none";
+                    alert("Professional Demographics updated successfully!");
+                } else {
+                    console.warn("HTTP 200 OK returned, but 0 rows match representation arrays.");
+                    alert("Transaction sent, but Row-Level Security rules isolated the target record update.");
+                }
+
+            } catch (error) {
+                console.error("Direct transaction processing error:", error);
+                alert("Failed to commit updates.\nDetails: " + error.message);
             } finally {
                 resetButton();
             }
 
             function resetButton() {
-                saveBtn.textContent = originalBtnText;
+                saveBtn.textContent = originalText;
                 saveBtn.disabled = false;
             }
         };
     </script>
-
-</body>
-
-</html>

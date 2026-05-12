@@ -28,7 +28,7 @@
 
         <div class="welcome-header">
             <div>
-                <h2 class="welcome-text">Welcome, <span>Juan!</span></h2>
+                <h2 class="welcome-text">Welcome, <span>Teacher!</span></h2>
                 <p class="date-text" id="currentDate">Teacher Dashboard</p>
             </div>
         </div>
@@ -104,76 +104,94 @@
     </main>
 
     <script type="module">
-        // 🔁 Supabase import
-        import { supabase } from "./Meraki_Supabase.js";
+        // Import URL and Key directly from connection file
+        import { supabase, supabaseUrl, supabaseAnonKey } from "./Meraki_Supabase.js";
 
-        // Wait for auth state
+        let currentUser = null;
+        let globalAccessToken = null;
+
         supabase.auth.onAuthStateChange(async (event, session) => {
             if (!session) {
-                // Not logged in → redirect
                 window.location.replace("login.html");
                 return;
             }
 
-            const user = session.user;
-            try {
-                // Fetch the teacher's profile from the Supabase "profiles" table
-                const { data: profile, error } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', user.id)
-                    .single();
+            currentUser = session.user;
+            globalAccessToken = session.access_token;
 
-                if (error || !profile) {
-                    console.error("Error fetching profile:", error);
-                    // If profile is missing, redirect to login (maybe trigger not fired)
-                    window.location.replace("login.html");
+            try {
+                // Fetch directly mapped absolute PostgREST endpoint
+                const telemetryEndpoint = `${supabaseUrl}/rest/v1/profiles?id=eq.${currentUser.id}&select=*`;
+
+                const response = await fetch(telemetryEndpoint, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': supabaseAnonKey,
+                        'Authorization': `Bearer ${globalAccessToken}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: Database fetch failed.`);
+                }
+
+                const payloadRepresentation = await response.json();
+
+                if (!payloadRepresentation || payloadRepresentation.length === 0) {
+                    console.warn("Telemetry mapping empty. Trigger completion pending database sync sweeps.");
+                    document.querySelector('.welcome-text span').textContent = "New Teacher";
                     return;
                 }
 
-                // Update welcome name
+                const profile = payloadRepresentation[0];
+
                 document.querySelector('.welcome-text span').textContent = profile.name || "Teacher";
 
-                // Update stats
-                const teachingCount = profile.teachingLoadCount || 0;
-                const adminCount = profile.adminRolesCount || 0;
-                const ancillaryCount = profile.ancillaryTasksCount || 0;
+                const teachingCount = profile.teachingLoadCount || (Array.isArray(profile.teachingLoad) ? profile.teachingLoad.length : 0);
+                const adminCount = profile.adminRolesCount || (Array.isArray(profile.adminRoles) ? profile.adminRoles.length : 0);
+                const ancillaryCount = profile.ancillaryTasksCount || (Array.isArray(profile.ancillaryDuties) ? profile.ancillaryDuties.length : 0);
 
                 document.querySelectorAll('.stat-box strong')[0].textContent = teachingCount + " Classes";
                 document.querySelectorAll('.stat-box strong')[1].textContent = adminCount;
                 document.querySelectorAll('.stat-box strong')[2].textContent = ancillaryCount;
 
-                // Update Risk Score if assessment data exists
-                if (profile.riskLevel) {
-                    const badge = document.querySelector('.risk-badge');
-                    const circle = document.querySelector('.score-circle');
-                    const desc = document.querySelector('.risk-desc');
-
-                    badge.textContent = profile.riskLevel.toUpperCase() + " RISK";
-                    circle.textContent = profile.assessmentScore || "N/A";
-
-                    let color = 'var(--success)';
-                    if (profile.riskLevel.toLowerCase() === 'high') {
-                        color = 'var(--danger)';
-                        desc.textContent = "Your current workload severely exceeds optimal ranges, putting you at high risk for burnout.";
-                    } else if (profile.riskLevel.toLowerCase() === 'moderate') {
-                        color = 'var(--warning)';
-                        desc.textContent = "Your workload is elevated. Monitor your stress levels and consider rebalancing duties.";
-                    } else {
-                        // Low
-                        desc.textContent = "Your workload is well-balanced. Keep up the great work!";
+                const totalStructuralTasks = teachingCount + adminCount + ancillaryCount;
+                if (totalStructuralTasks > 0) {
+                    const pctTeaching = Math.round((teachingCount / totalStructuralTasks) * 100);
+                    const pctAdmin = Math.round((adminCount / totalStructuralTasks) * 100);
+                    const chartNode = document.querySelector('.pie-chart');
+                    if (chartNode) {
+                        chartNode.style.background = `conic-gradient(var(--primary) 0% ${pctTeaching}%, var(--accent) ${pctTeaching}% ${pctTeaching + pctAdmin}%, var(--warning) ${pctTeaching + pctAdmin}% 100%)`;
                     }
-
-                    badge.style.backgroundColor = color;
-                    circle.style.borderColor = color;
-                    circle.style.color = color;
-                } else {
-                    // No assessment data yet – keep the default "NO DATA" appearance
-                    // (The HTML already shows the NO DATA state, so we can leave it)
                 }
 
-            } catch (error) {
-                console.error("Error in dashboard:", error);
+                if (profile.riskLevel && profile.riskLevel !== "No Data") {
+                    const riskBadgeNode = document.querySelector('.risk-badge');
+                    const scoreCircleNode = document.querySelector('.score-circle');
+                    const descNode = document.querySelector('.risk-desc');
+
+                    riskBadgeNode.textContent = profile.riskLevel.toUpperCase() + " RISK";
+                    scoreCircleNode.textContent = profile.assessmentScore !== null && profile.assessmentScore !== undefined ? profile.assessmentScore : "N/A";
+
+                    let diagnosticThemeColor = 'var(--success)';
+                    if (profile.riskLevel.toLowerCase() === 'high') {
+                        diagnosticThemeColor = 'var(--danger)';
+                        descNode.textContent = "Your current workload severely exceeds optimal ranges, putting you at high risk for burnout.";
+                    } else if (profile.riskLevel.toLowerCase() === 'moderate') {
+                        diagnosticThemeColor = 'var(--warning)';
+                        descNode.textContent = "Your workload is elevated. Monitor your stress levels and consider rebalancing duties.";
+                    } else {
+                        descNode.textContent = "Your workload is well-balanced. Keep up the great work!";
+                    }
+
+                    riskBadgeNode.style.backgroundColor = diagnosticThemeColor;
+                    scoreCircleNode.style.borderColor = diagnosticThemeColor;
+                    scoreCircleNode.style.color = diagnosticThemeColor;
+                }
+
+            } catch (err) {
+                console.error("Dashboard database initialization drop:", err);
             }
         });
     </script>
