@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Meraki System</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .password-wrapper {
+            position: relative;
+        }
+
+        .password-wrapper input {
+            padding-right: 2.5rem;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 0.8rem;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            background: none;
+            border: none;
+            line-height: 0;
+            padding: 0;
+            color: var(--text-muted);
+            transition: color 0.2s;
+        }
+
+        .toggle-password:hover {
+            color: var(--primary);
+        }
+
+        .toggle-password svg {
+            width: 20px;
+            height: 20px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+        }
+    </style>
+</head>
+
+<body class="login-body">
+
+    <div class="login-wrapper">
+        <div class="login-header">
+            <span class="logo-icon">🔵🟡⚪</span>
+            <h2><strong>Meraki</strong> Teacher Workload & Burnout Risk Management System</h2>
+        </div>
+
+        <form class="login-form" id="loginForm" autocomplete="on">
+            <input type="email" id="username" name="username" placeholder="DepEd Email" required
+                autocomplete="username">
+
+            <div class="password-wrapper">
+                <input type="password" id="password" name="password" placeholder="Password" required
+                    autocomplete="current-password">
+                <button type="button" class="toggle-password" data-target="password" aria-label="Show password">
+                    <!-- Eye (visible) icon -->
+                    <svg viewBox="0 0 24 24">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                        <circle cx="12" cy="12" r="3" />
+                    </svg>
+                </button>
+            </div>
+
+            <select id="role" name="role" required autocomplete="off">
+                <option value="" disabled selected>Select Access Role</option>
+                <option value="teacher">Teacher Portal</option>
+                <option value="principal">Principal Dashboard</option>
+            </select>
+
+            <button type="submit" class="login-submit-btn">Log In to Meraki</button>
+            <a href="#" class="forgot-password">Need help logging in?</a>
+            <p style="text-align: center; margin-top: 1rem; font-size: 0.95rem;">
+                Don't have an account? <a href="register.html" style="color: var(--primary); font-weight: 600;">Sign
+                    Up</a>
+            </p>
+        </form>
+    </div>
+
+    <script>
+        // Eye icon toggler (open/closed)
+        const eyeOpen = `<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+        const eyeClosed = `<svg viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+
+        document.querySelectorAll('.toggle-password').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const targetId = this.getAttribute('data-target');
+                const input = document.getElementById(targetId);
+                const isPassword = input.type === 'password';
+                input.type = isPassword ? 'text' : 'password';
+                this.innerHTML = isPassword ? eyeClosed : eyeOpen;
+            });
+        });
+    </script>
+
+    <!-- ... same HTML up to the script ... -->
+    <script type="module">
+        // 🔁 New Supabase import
+        import { supabase } from "./Meraki_Supabase.js";
+
+        document.getElementById('loginForm').addEventListener('submit', async function (event) {
+            event.preventDefault();
+
+            const email = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const role = document.getElementById('role').value;
+
+            const submitBtn = document.querySelector('.login-submit-btn');
+            submitBtn.textContent = "Authenticating...";
+
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password
+                });
+
+                if (error) throw error;
+
+                // Route based on role
+                if (role === 'teacher') {
+                    window.location.href = 'dashboard.html';
+                } else if (role === 'principal') {
+                    window.location.href = 'principal.html';
+                } else {
+                    alert('Please select a valid role.');
+                    submitBtn.textContent = "Log In to Meraki";
+                }
+            } catch (error) {
+                alert("Login Failed. Please check your credentials.");
+                submitBtn.textContent = "Log In to Meraki";
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard - Meraki System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="dashboard-body">
+
+    <header class="navbar">
+        <div class="logo-container">
+            <span class="logo-icon">🔵🟡⚪</span>
+            <h1 class="logo">Meraki</h1>
+        </div>
+        <nav>
+            <ul class="nav-links">
+                <li><a href="assessment.html">Take Assessment</a></li>
+                <li><a href="profile.html">My Profile</a></li>
+                <li><a href="index.html" class="login-btn">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="dashboard-main">
+
+        <div class="welcome-header">
+            <div>
+                <h2 class="welcome-text">Welcome, <span>Juan!</span></h2>
+                <p class="date-text" id="currentDate">Teacher Dashboard</p>
+            </div>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-box">
+                <span class="stat-label">Teaching Load</span>
+                <strong>0 Classes</strong>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">Admin Roles</span>
+                <strong>0</strong>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">Ancillary Tasks</span>
+                <strong>0</strong>
+            </div>
+        </div>
+
+        <div class="dashboard-card chart-section">
+            <div class="chart-info">
+                <h3>Workload Distribution</h3>
+                <ul class="chart-legend">
+                    <li><span class="dot teaching-dot"></span> Teaching</li>
+                    <li><span class="dot admin-dot"></span> Admin Roles</li>
+                    <li><span class="dot ancillary-dot"></span> Ancillary Duties</li>
+                </ul>
+            </div>
+
+            <div class="pie-chart-container">
+                <div class="pie-chart"></div>
+            </div>
+        </div>
+
+        <div class="ai-section">
+            <div class="dashboard-card risk-card">
+                <div class="card-header">
+                    <h3>🤖 AI Burnout Analysis</h3>
+                    <span class="risk-badge" style="background-color: var(--text-muted);">NO DATA</span>
+                </div>
+                <div class="risk-score">
+                    <div class="score-circle" style="border-color: var(--text-muted); color: var(--text-muted);">?</div>
+                    <p class="risk-desc">Take the Burnout Risk Assessment to generate your AI workload analysis.</p>
+
+                    <a href="assessment.html" class="login-btn"
+                        style="display: inline-block; margin-top: 1.5rem; text-align: center;">Take Risk Assessment</a>
+                </div>
+            </div>
+
+            <div class="dashboard-card recommendations-card">
+                <div class="card-header">
+                    <h3>💡 Smart Recommendations</h3>
+                </div>
+                <div class="rec-list">
+                    <div class="rec-item critical">
+                        <div class="rec-icon">⚠️</div>
+                        <div class="rec-text">
+                            <h4>Rebalance Admin Duties</h4>
+                            <p>Consider stepping down from heavy administrative roles to reduce stress.</p>
+                        </div>
+                    </div>
+                    <div class="rec-item">
+                        <div class="rec-icon">📊</div>
+                        <div class="rec-text">
+                            <h4>Schedule Optimization</h4>
+                            <p>Consolidate classes to minimize prep time between sessions.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script type="module">
+        // 🔁 Supabase import
+        import { supabase } from "./Meraki_Supabase.js";
+
+        // Wait for auth state
+        supabase.auth.onAuthStateChange(async (event, session) => {
+            if (!session) {
+                // Not logged in → redirect
+                window.location.replace("login.html");
+                return;
+            }
+
+            const user = session.user;
+            try {
+                // Fetch the teacher's profile from the Supabase "profiles" table
+                const { data: profile, error } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', user.id)
+                    .single();
+
+                if (error || !profile) {
+                    console.error("Error fetching profile:", error);
+                    // If profile is missing, redirect to login (maybe trigger not fired)
+                    window.location.replace("login.html");
+                    return;
+                }
+
+                // Update welcome name
+                document.querySelector('.welcome-text span').textContent = profile.name || "Teacher";
+
+                // Update stats
+                const teachingCount = profile.teachingLoadCount || 0;
+                const adminCount = profile.adminRolesCount || 0;
+                const ancillaryCount = profile.ancillaryTasksCount || 0;
+
+                document.querySelectorAll('.stat-box strong')[0].textContent = teachingCount + " Classes";
+                document.querySelectorAll('.stat-box strong')[1].textContent = adminCount;
+                document.querySelectorAll('.stat-box strong')[2].textContent = ancillaryCount;
+
+                // Update Risk Score if assessment data exists
+                if (profile.riskLevel) {
+                    const badge = document.querySelector('.risk-badge');
+                    const circle = document.querySelector('.score-circle');
+                    const desc = document.querySelector('.risk-desc');
+
+                    badge.textContent = profile.riskLevel.toUpperCase() + " RISK";
+                    circle.textContent = profile.assessmentScore || "N/A";
+
+                    let color = 'var(--success)';
+                    if (profile.riskLevel.toLowerCase() === 'high') {
+                        color = 'var(--danger)';
+                        desc.textContent = "Your current workload severely exceeds optimal ranges, putting you at high risk for burnout.";
+                    } else if (profile.riskLevel.toLowerCase() === 'moderate') {
+                        color = 'var(--warning)';
+                        desc.textContent = "Your workload is elevated. Monitor your stress levels and consider rebalancing duties.";
+                    } else {
+                        // Low
+                        desc.textContent = "Your workload is well-balanced. Keep up the great work!";
+                    }
+
+                    badge.style.backgroundColor = color;
+                    circle.style.borderColor = color;
+                    circle.style.color = color;
+                } else {
+                    // No assessment data yet – keep the default "NO DATA" appearance
+                    // (The HTML already shows the NO DATA state, so we can leave it)
+                }
+
+            } catch (error) {
+                console.error("Error in dashboard:", error);
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Burnout Risk Assessment - Meraki</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Extra styles specifically for the clean Likert scale forms */
+        .rubric-section {
+            margin-bottom: 2.5rem;
+        }
+
+        .rubric-header {
+            border-bottom: 2px solid var(--accent);
+            color: var(--primary);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .question-group {
+            margin-bottom: 1.5rem;
+            background: var(--bg-body);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-light);
+        }
+
+        .question-group label {
+            display: block;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 0.75rem;
+            font-size: 0.95rem;
+        }
+
+        .question-group select,
+        .question-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            background-color: var(--bg-card);
+        }
+
+        .subcategory {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+
+<body class="dashboard-body">
+
+    <header class="navbar">
+        <div class="logo-container">
+            <span class="logo-icon">🔵🟡⚪</span>
+            <h1 class="logo">Meraki</h1>
+        </div>
+        <nav>
+            <ul class="nav-links">
+                <li><a href="dashboard.html">Cancel / Back</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="profile-main">
+        <div class="profile-card">
+            <div class="profile-card-header">
+                <h2>Official Workload & Wellness Pulse</h2>
+            </div>
+
+            <div class="profile-card-body">
+                <p style="text-align: center; color: var(--text-muted); margin-bottom: 2rem;">
+                    This 120-point assessment integrates official DepEd structural metrics with the Maslach Burnout
+                    Inventory dimensions.
+                </p>
+
+                <form id="assessmentForm">
+
+                    <div class="rubric-section">
+                        <h3 class="rubric-header">PART A: Structural Workload (eSF7 Data)</h3>
+
+                        <div class="question-group">
+                            <label>1. Total Instructional Minutes per week:</label>
+                            <input type="number" id="a1_mins" value="1800" min="0" required>
+                            <small style="color: var(--text-muted); display: block; margin-top: 0.5rem;">Baseline is
+                                1,800 mins. Overloads trigger penalties.</small>
+                        </div>
+
+                        <div class="question-group">
+                            <label>2. Number of distinct subjects/academic preparations:</label>
+                            <input type="number" id="a2_preps" value="1" min="1" required>
+                            <small style="color: var(--text-muted); display: block; margin-top: 0.5rem;">Baseline is
+                                1-2. Extra distinct subjects trigger penalties.</small>
+                        </div>
+
+                        <div class="question-group">
+                            <label>3. Heaviest Administrative or Ancillary Role currently held:</label>
+                            <select id="a3_admin" required>
+                                <option value="0">None</option>
+                                <option value="5">Light Role (e.g., Club Moderator, Committee Member)</option>
+                                <option value="10">Medium Role (e.g., Class Adviser)</option>
+                                <option value="20">Heavy Role (e.g., Grade Level Chair, LIS Coordinator)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="rubric-section">
+                        <h3 class="rubric-header">PART B: Monthly Wellness Pulse (MBI)</h3>
+                        <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.5rem;">Rate how often
+                            you experience the following (1 = Never, 2 = Sometimes, 3 = Often, 4 = Always).</p>
+
+                        <div class="subcategory">Resources (Teacher Efficacy)</div>
+                        <div class="question-group">
+                            <label>1. I have a reputation as an efficient and competent teacher among my
+                                colleagues.</label>
+                            <select class="mbi-reverse" required>
+                                <option value="1">1 - Never</option>
+                                <option value="2">2 - Sometimes</option>
+                                <option value="3">3 - Often</option>
+                                <option value="4">4 - Always</option>
+                            </select>
+
+                            <label style="margin-top: 1rem;">2. I feel I am a valuable person in my teaching
+                                profession.</label>
+                            <select class="mbi-reverse" required>
+                                <option value="1">1 - Never</option>
+                                <option value="2">2 - Sometimes</option>
+                                <option value="3">3 - Often</option>
+                                <option value="4">4 - Always</option>
+                            </select>
+
+                            <label style="margin-top: 1rem;">3. I am able to motivate students who show low interest in
+                                schoolwork.</label>
+                            <select class="mbi-reverse" required>
+                                <option value="1">1 - Never</option>
+                                <option value="2">2 - Sometimes</option>
+                                <option value="3">3 - Often</option>
+                                <option value="4">4 - Always</option>
+                            </select>
+                        </div>
+
+                        <div class="subcategory">Demands (Emotional Exhaustion)</div>
+                        <div class="question-group">
+                            <label>4. I feel emotionally exhausted from my teaching and administrative duties.</label>
+                            <select class="mbi-standard" required>
+                                <option value="1">1 - Never</option>
+                                <option value="2">2 - Sometimes</option>
+                                <option value="3">3 - Often</option>
+                                <option value="4">4 - Always</option>
+                            </select>
+
+                            <label style="margin-top: 1rem;">5. I feel tired when I wake up in the morning and have to
+                                face another day at work.</label>
+                            <select class="mbi-standard" required>
+                                <option value="1">1 - Never</option>
+                                <option value="2">2 - Sometimes</option>
+                                <option value="3">3 - Often</option>
+                                <option value="4">4 - Always</option>
+                            </select>
+
+                            <label style="margin-top: 1rem;">6. Working with people (students, parents, co-workers) all
+                                day is really weighing me down.</label>
+                            <select class="mbi-standard" required>
+                                <option value="1">1 - Never</option>
+                                <option value="2">2 - Sometimes</option>
+                                <option value="3">3 - Often</option>
+                                <option value="4">4 - Always</option>
+                            </select>
+                        </div>
+
+                        <div class="subcategory">Cynicism (Depersonalization)</div>
+                        <div class="question-group">
+                            <label>7. I am worried that this job is hardening me emotionally.</label>
+                            <select class="mbi-standard" required>
+                                <option value="1">1 - Never</option>
+                                <option value="2">2 - Sometimes</option>
+                                <option value="3">3 - Often</option>
+                                <option value="4">4 - Always</option>
+                            </select>
+
+                            <label style="margin-top: 1rem;">8. I feel frustrated with the systemic demands of my
+                                job.</label>
+                            <select class="mbi-standard" required>
+                                <option value="1">1 - Never</option>
+                                <option value="2">2 - Sometimes</option>
+                                <option value="3">3 - Often</option>
+                                <option value="4">4 - Always</option>
+                            </select>
+
+                            <label style="margin-top: 1rem;">9. I feel disconnected from the students I am supposed to
+                                be helping.</label>
+                            <select class="mbi-standard" required>
+                                <option value="1">1 - Never</option>
+                                <option value="2">2 - Sometimes</option>
+                                <option value="3">3 - Often</option>
+                                <option value="4">4 - Always</option>
+                            </select>
+                        </div>
+
+                        <div class="subcategory">Efficacy Drop (Reduced Personal Accomplishment)</div>
+                        <div class="question-group">
+                            <label>10. I can't easily create a relaxed atmosphere with my students.</label>
+                            <select class="mbi-standard" required>
+                                <option value="1">1 - Never</option>
+                                <option value="2">2 - Sometimes</option>
+                                <option value="3">3 - Often</option>
+                                <option value="4">4 - Always</option>
+                            </select>
+
+                            <label style="margin-top: 1rem;">11. I don't feel happy or fulfilled after working with my
+                                students.</label>
+                            <select class="mbi-standard" required>
+                                <option value="1">1 - Never</option>
+                                <option value="2">2 - Sometimes</option>
+                                <option value="3">3 - Often</option>
+                                <option value="4">4 - Always</option>
+                            </select>
+
+                            <label style="margin-top: 1rem;">12. I feel I haven't done many valuable things in this job
+                                lately.</label>
+                            <select class="mbi-standard" required>
+                                <option value="1">1 - Never</option>
+                                <option value="2">2 - Sometimes</option>
+                                <option value="3">3 - Often</option>
+                                <option value="4">4 - Always</option>
+                            </select>
+
+                            <label style="margin-top: 1rem;">13. I struggle to handle emotional issues calmly in my
+                                classroom.</label>
+                            <select class="mbi-standard" required>
+                                <option value="1">1 - Never</option>
+                                <option value="2">2 - Sometimes</option>
+                                <option value="3">3 - Often</option>
+                                <option value="4">4 - Always</option>
+                            </select>
+
+                            <label style="margin-top: 1rem;">14. I feel students are blaming me for some of their
+                                problems.</label>
+                            <select class="mbi-standard" required>
+                                <option value="1">1 - Never</option>
+                                <option value="2">2 - Sometimes</option>
+                                <option value="3">3 - Often</option>
+                                <option value="4">4 - Always</option>
+                            </select>
+
+                            <label style="margin-top: 1rem;">15. I can't easily understand how my students feel about
+                                things.</label>
+                            <select class="mbi-standard" required>
+                                <option value="1">1 - Never</option>
+                                <option value="2">2 - Sometimes</option>
+                                <option value="3">3 - Often</option>
+                                <option value="4">4 - Always</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="profile-actions" style="margin-top: 1rem;">
+                        <button type="submit" class="save-profile-btn"
+                            style="width: 100%; padding: 1.25rem; font-size: 1.2rem;">Calculate 120-Point Meraki
+                            Score</button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { app } from "./Meraki_Firebase.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        let currentUser = null;
+
+        // Security Guard
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                window.location.replace("login.html");
+            } else {
+                currentUser = user;
+            }
+        });
+
+        // The 120-Point Expert System Engine
+        document.getElementById('assessmentForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            if (!currentUser) return;
+
+            const btn = document.querySelector('.save-profile-btn');
+            btn.innerHTML = 'Executing Expert System Algorithm... ⏳';
+            btn.style.opacity = '0.7';
+            btn.disabled = true;
+
+            // --- CALCULATE PART A (Max 60 pts) ---
+            let partAScore = 0;
+
+            // 1. Instructional Load (Max 20 pts)
+            const mins = parseInt(document.getElementById('a1_mins').value);
+            if (mins > 1800) {
+                const overloadBlocks = Math.floor((mins - 1800) / 60);
+                partAScore += Math.min(20, overloadBlocks * 10);
+            }
+
+            // 2. Academic Preps (Max 15 pts)
+            const preps = parseInt(document.getElementById('a2_preps').value);
+            if (preps > 2) {
+                const extraPreps = preps - 2;
+                partAScore += Math.min(15, extraPreps * 5);
+            }
+
+            // 3. Admin Duties (Max 25 pts) - Pulled from dropdown value
+            const adminPoints = parseInt(document.getElementById('a3_admin').value);
+            partAScore += adminPoints;
+
+            // Ensure Part A doesn't somehow exceed 60
+            partAScore = Math.min(60, partAScore);
+
+            // --- CALCULATE PART B (Max 60 pts) ---
+            let partBScore = 0;
+
+            // Reverse Scored Items (Q1-Q3)
+            const reverseItems = document.querySelectorAll('.mbi-reverse');
+            reverseItems.forEach(item => {
+                // Formula: 5 - Input (If they answer 4, they get 1 penalty point. If they answer 1, they get 4)
+                partBScore += (5 - parseInt(item.value));
+            });
+
+            // Standard Scored Items (Q4-Q15)
+            const standardItems = document.querySelectorAll('.mbi-standard');
+            standardItems.forEach(item => {
+                partBScore += parseInt(item.value);
+            });
+
+            // --- PART C: FINAL CALCULATION ---
+            const totalScore = partAScore + partBScore;
+
+            let calculatedRisk = "Low";
+            if (totalScore >= 91) {
+                calculatedRisk = "High";
+            } else if (totalScore >= 56) {
+                calculatedRisk = "Moderate";
+            }
+
+            try {
+                // Save to Firebase
+                await setDoc(doc(db, "users", currentUser.uid), {
+                    assessmentScore: totalScore,
+                    partAScore: partAScore,
+                    partBScore: partBScore,
+                    riskLevel: calculatedRisk,
+                    lastAssessmentDate: new Date()
+                }, { merge: true });
+
+                // Redirect to dashboard
+                window.location.href = 'dashboard.html';
+
+            } catch (error) {
+                console.error("Error saving assessment:", error);
+                alert("Failed to save assessment. Please check console.");
+                btn.innerHTML = 'Calculate 120-Point Meraki Score';
+                btn.style.opacity = '1';
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+
+</html>

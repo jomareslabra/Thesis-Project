@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Principal Dashboard - Meraki</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="dashboard-body">
+
+    <header class="navbar">
+        <div class="logo-container">
+            <span class="logo-icon">🔵🟡⚪</span>
+            <h1 class="logo">Meraki</h1>
+        </div>
+        <nav>
+            <ul class="nav-links">
+                <li><a href="index.html" class="login-btn">Logout</a></li>
+            </ul>
+        </nav>
+        <div class="welcome-header" style="margin-bottom: 2rem;">
+            <h2 class="section-title" style="margin-bottom: 0;">Welcome, <span id="principalName"
+                    style="color: var(--primary);">Principal</span>!</h2>
+            <p style="color: var(--text-muted); font-weight: 500;">School Overview Dashboard</p>
+        </div>
+    </header>
+
+    <main class="principal-main">
+        <h2 class="section-title">School Overview</h2>
+        <div class="kpi-container">
+            <div class="kpi-card total-kpi">
+                <span class="kpi-label">Total Teachers:</span>
+                <span class="kpi-value">...</span>
+            </div>
+            <div class="kpi-card high-kpi">
+                <span class="kpi-label">High Risk</span>
+                <span class="kpi-value text-red">...</span>
+            </div>
+            <div class="kpi-card moderate-kpi">
+                <span class="kpi-label">Moderate Risk</span>
+                <span class="kpi-value text-green">...</span>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table class="teacher-table">
+                <thead>
+                    <tr>
+                        <th>Teacher</th>
+                        <th>Teaching Load</th>
+                        <th>Admin Roles</th>
+                        <th>Risk Level</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="teachersTableBody">
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading
+                            teachers from Firebase...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="heatmap-container">
+            <h3 class="heatmap-title">School-wide Burnout Heatmap</h3>
+            <div class="heatmap-grid" id="heatmapGrid">
+                <!-- Generating sample interactive heatmap boxes -->
+                <script>
+                    const grid = document.getElementById('heatmapGrid');
+                    const colors = [
+                        { class: 'green', desc: 'Low Risk' },
+                        { class: 'yellow', desc: 'Slight Risk' },
+                        { class: 'orange', desc: 'Moderate Risk' },
+                        { class: 'red', desc: 'High Risk' },
+                        { class: 'gray', desc: 'No Data' }
+                    ];
+
+                    // Simple simulated generation of 48 teacher data points
+                    for (let i = 1; i <= 48; i++) {
+                        // Weighted random to simulate real distribution
+                        let rand = Math.random();
+                        let colorObj = colors[4]; // Default Gray
+
+                        if (rand < 0.3) colorObj = colors[0]; // 30% Green
+                        else if (rand < 0.6) colorObj = colors[1]; // 30% Yellow
+                        else if (rand < 0.8) colorObj = colors[2]; // 20% Orange
+                        else if (rand < 0.95) colorObj = colors[3]; // 15% Red
+
+                        grid.innerHTML += `<div class="heat-box ${colorObj.class}" data-tooltip="Teacher ${i} - ${colorObj.desc}"></div>`;
+                    }
+                </script>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Workload Edit Modal -->
+    <div id="workloadModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="closeWorkloadModal">&times;</span>
+            <h2 style="color: #3b5ca0; margin-bottom: 1rem;" id="workloadModalTitle">Edit Workload</h2>
+            <form id="workloadForm">
+                <input type="hidden" id="editTeacherId">
+
+                <label>Teaching Load (Separate with commas):</label>
+                <textarea id="editTeaching"></textarea>
+
+                <label>Administrative Roles (Separate with commas):</label>
+                <textarea id="editAdmin"></textarea>
+
+                <label>Ancillary Duties (Separate with commas):</label>
+                <textarea id="editAncillary"></textarea>
+
+                <button type="submit" class="save-profile-btn" style="margin-top: 1.5rem;">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        import { app } from "./Meraki_Firebase.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getFirestore, collection, getDocs, query, where, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const workloadModal = document.getElementById("workloadModal");
+        const closeWorkloadModalBtn = document.getElementById("closeWorkloadModal");
+        const workloadForm = document.getElementById("workloadForm");
+
+        closeWorkloadModalBtn.onclick = () => workloadModal.style.display = "none";
+        window.onclick = (e) => { if (e.target == workloadModal) workloadModal.style.display = "none"; }
+
+        async function fetchAndRenderTeachers() {
+            try {
+                const q = query(collection(db, "users"), where("role", "==", "teacher"));
+                const querySnapshot = await getDocs(q);
+
+                const tbody = document.getElementById("teachersTableBody");
+                tbody.innerHTML = "";
+
+                let teacherCount = 0;
+                let highRiskCount = 0;
+                let moderateRiskCount = 0;
+
+                querySnapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    teacherCount++;
+
+                    let riskBadgeClass = "low-risk-bg";
+                    const risk = (data.riskLevel || "Low");
+                    if (risk.toLowerCase() === "high") {
+                        riskBadgeClass = "high-risk-bg";
+                        highRiskCount++;
+                    } else if (risk.toLowerCase() === "moderate") {
+                        riskBadgeClass = "moderate-risk-bg";
+                        moderateRiskCount++;
+                    }
+
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td>${data.name || "Unknown Teacher"}</td>
+                        <td>${data.teachingLoadCount || (Array.isArray(data.teachingLoad) ? data.teachingLoad.length : 0)}</td>
+                        <td>${data.adminRolesCount || (Array.isArray(data.adminRoles) ? data.adminRoles.length : 0)}</td>
+                        <td><span class="risk-badge ${riskBadgeClass}">${risk}</span></td>
+                        <td><button class="save-profile-btn edit-workload-btn" data-id="${docSnap.id}" style="padding: 0.5rem 1rem; font-size: 0.8rem;">Edit Workload</button></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                if (teacherCount === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 1rem;">No teachers found.</td></tr>';
+                }
+
+                // Update KPI totals
+                document.querySelector(".total-kpi .kpi-value").textContent = teacherCount;
+                document.querySelector(".high-kpi .kpi-value").textContent = highRiskCount;
+                document.querySelector(".moderate-kpi .kpi-value").textContent = moderateRiskCount;
+
+                // Attach event listeners to buttons
+                document.querySelectorAll(".edit-workload-btn").forEach(btn => {
+                    btn.addEventListener("click", async (e) => {
+                        const teacherId = e.target.getAttribute("data-id");
+                        await openEditModal(teacherId);
+                    });
+                });
+            } catch (error) {
+                console.error("Error fetching teachers data:", error);
+                document.getElementById("teachersTableBody").innerHTML = '<tr><td colspan="5" style="text-align:center; color:red; padding: 1rem;">Error loading data from Firebase.</td></tr>';
+            }
+        }
+
+        async function openEditModal(teacherId) {
+            try {
+                const tDoc = await getDoc(doc(db, "users", teacherId));
+                if (tDoc.exists()) {
+                    const data = tDoc.data();
+                    document.getElementById("workloadModalTitle").textContent = `Edit Workload for ${data.name || "Teacher"}`;
+                    document.getElementById("editTeacherId").value = teacherId;
+
+                    document.getElementById("editTeaching").value = Array.isArray(data.teachingLoad) ? data.teachingLoad.join(', ') : (data.teachingLoad || "");
+                    document.getElementById("editAdmin").value = Array.isArray(data.adminRoles) ? data.adminRoles.join(', ') : (data.adminRoles || "");
+                    document.getElementById("editAncillary").value = Array.isArray(data.ancillaryDuties) ? data.ancillaryDuties.join(', ') : (data.ancillaryDuties || "");
+
+                    workloadModal.style.display = "flex";
+                }
+            } catch (error) {
+                console.error("Error fetching teacher details:", error);
+                alert("Error loading teacher details.");
+            }
+        }
+
+        workloadForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const saveBtn = workloadForm.querySelector('button[type="submit"]');
+            saveBtn.textContent = "Saving... ⏳";
+            
+            const teacherId = document.getElementById("editTeacherId").value;
+            const teachingStr = document.getElementById("editTeaching").value;
+            const adminStr = document.getElementById("editAdmin").value;
+            const ancillaryStr = document.getElementById("editAncillary").value;
+
+            const teachingArray = teachingStr.split(',').map(item => item.trim()).filter(i => i !== "");
+            const adminArray = adminStr.split(',').map(item => item.trim()).filter(i => i !== "");
+            const ancillaryArray = ancillaryStr.split(',').map(item => item.trim()).filter(i => i !== "");
+
+            try {
+                await setDoc(doc(db, "users", teacherId), {
+                    teachingLoad: teachingArray,
+                    adminRoles: adminArray,
+                    ancillaryDuties: ancillaryArray,
+                    teachingLoadCount: teachingArray.length,
+                    adminRolesCount: adminArray.length,
+                    ancillaryTasksCount: ancillaryArray.length
+                }, { merge: true });
+
+                workloadModal.style.display = "none";
+                saveBtn.textContent = "Save Changes";
+                await fetchAndRenderTeachers();
+            } catch (error) {
+                console.error("Error saving workload:", error);
+                alert("Failed to save. Check console.");
+                saveBtn.textContent = "Save Changes";
+            }
+        };
+
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                window.location.replace("login.html");
+            } else {
+                try {
+                    // Principal Role Verification
+                    const principalDocRef = doc(db, "users", user.uid);
+                    const principalDoc = await getDoc(principalDocRef);
+                    
+                    if (principalDoc.exists()) {
+                        const data = principalDoc.data();
+                        if (data.role !== "principal") {
+                            if (!data.role) {
+                                // First login, set role to principal
+                                await setDoc(principalDocRef, { role: "principal" }, { merge: true });
+                            } else {
+                                // Not a principal
+                                window.location.replace("index.html"); // or login.html
+                                return;
+                            }
+                        }
+                        if (data.name) {
+                            document.getElementById("principalName").textContent = data.name;
+                        }
+                    } else {
+                        // Doc doesn't exist, create it with principal role
+                        await setDoc(principalDocRef, { role: "principal" }, { merge: true });
+                    }
+
+                    // Fetch and Render Teachers
+                    await fetchAndRenderTeachers();
+
+                } catch (error) {
+                    console.error("Error initializing dashboard:", error);
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
