@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teacher Workload Profile</title>
+    <title>Teacher Workload Profile - Meraki</title>
     <link rel="stylesheet" href="style.css">
 </head>
 
@@ -12,8 +12,8 @@
 
     <header class="navbar">
         <div class="logo-container">
-            <span class="logo-icon">🔵🔴🟡</span>
-            <h1 class="logo">System</h1>
+            <span class="logo-icon">🔵🟡⚪</span>
+            <h1 class="logo">Meraki</h1>
         </div>
         <nav>
             <ul class="nav-links">
@@ -27,7 +27,7 @@
 
         <div class="profile-card">
             <div class="profile-card-header">
-                <h2>Teacher Workload Profile</h2>
+                <h2>Meraki Teacher Workload Profile</h2>
             </div>
 
             <div class="profile-card-body">
@@ -47,10 +47,6 @@
                     <div class="info-item">
                         <span class="info-label">Learning Area:</span>
                         <span class="info-value" id="displayLearningArea">—</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Specialization:</span>
-                        <span class="info-value" id="displaySpec">Science</span>
                     </div>
                 </div>
 
@@ -116,14 +112,42 @@
                 <label>Employee ID:</label>
                 <input type="text" id="inputEmployeeId" value="">
 
-                <label>Position (e.g., Teacher I, Teacher III, Master Teacher I):</label>
-                <input type="text" id="inputPosition" value="">
+                <label>Position:</label>
+                <select id="inputPosition"
+                    style="width: 100%; padding: 0.75rem; margin-bottom: 1rem; border: 1px solid var(--border-color); border-radius: 8px; font-family: inherit;">
+                    <option value="" disabled selected>Select Position</option>
+                    <option value="Teacher I">Teacher I</option>
+                    <option value="Teacher II">Teacher II</option>
+                    <option value="Teacher III">Teacher III</option>
+                    <option value="Teacher IV">Teacher IV</option>
+                    <option value="Teacher V">Teacher V</option>
+                    <option value="Teacher VI">Teacher VI</option>
+                    <option value="Teacher VII">Teacher VII</option>
+                    <option value="Master Teacher I">Master Teacher I</option>
+                    <option value="Master Teacher II">Master Teacher II</option>
+                    <option value="Master Teacher III">Master Teacher III</option>
+                    <option value="Master Teacher IV">Master Teacher IV</option>
+                    <option value="Master Teacher V">Master Teacher V</option>
+                </select>
 
-                <label>Learning Area (e.g., Science, Mathematics, Languages, MAPEH):</label>
-                <input type="text" id="inputLearningArea" value="">
-
-                <label>Specialization (e.g., Biology, Physics):</label>
-                <input type="text" id="inputSpec" value="">
+                <label>Learning Area:</label>
+                <select id="inputLearningArea"
+                    style="width: 100%; padding: 0.75rem; margin-bottom: 1rem; border: 1px solid var(--border-color); border-radius: 8px; font-family: inherit;">
+                    <option value="" disabled selected>Select Learning Area</option>
+                    <option value="Mother Tongue">Mother Tongue</option>
+                    <option value="Filipino">Filipino</option>
+                    <option value="English">English</option>
+                    <option value="Mathematics">Mathematics</option>
+                    <option value="Science">Science</option>
+                    <option value="Araling Panlipunan">Araling Panlipunan</option>
+                    <option value="Edukasyon sa Pagpapakatao (EsP)">Edukasyon sa Pagpapakatao (EsP)</option>
+                    <option value="Music">Music</option>
+                    <option value="Arts">Arts</option>
+                    <option value="Physical Education">Physical Education</option>
+                    <option value="Health">Health</option>
+                    <option value="Edukasyong Pantahanan at Pangkabuhayan (EPP)">Edukasyong Pantahanan at Pangkabuhayan
+                        (EPP)</option>
+                </select>
 
                 <button type="submit" class="save-profile-btn" style="margin-top: 1.5rem;">Save Demographics</button>
             </form>
@@ -195,14 +219,12 @@
             document.getElementById("displayEmployeeId").textContent = profileData.employeeId || "—";
             document.getElementById("displayPosition").textContent = profileData.position || "N/A";
             document.getElementById("displayLearningArea").textContent = profileData.learningArea || "—";
-            document.getElementById("displaySpec").textContent = profileData.specialization || "N/A";
 
             // Populate form nodes to guarantee clean state synchronization
             document.getElementById("inputName").value = profileData.name || "";
             document.getElementById("inputEmployeeId").value = profileData.employeeId || "";
             document.getElementById("inputPosition").value = profileData.position || "";
             document.getElementById("inputLearningArea").value = profileData.learningArea || "";
-            document.getElementById("inputSpec").value = profileData.specialization || "";
 
             // Workload array population
             const teachingArr = profileData.teachingLoad || [];
@@ -255,7 +277,6 @@
             const employeeId = document.getElementById("inputEmployeeId").value.trim();
             const position = document.getElementById("inputPosition").value.trim();
             const learningArea = document.getElementById("inputLearningArea").value.trim();
-            const spec = document.getElementById("inputSpec").value.trim();
 
             if (!name) {
                 alert("Name is required.");
@@ -280,8 +301,7 @@
                         name: name,
                         employeeId: employeeId || null,
                         position: position,
-                        learningArea: learningArea || null,
-                        specialization: spec
+                        learningArea: learningArea || null
                     })
                 });
 
