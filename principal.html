@@ -68,8 +68,6 @@
     <main class="principal-main">
         <div class="welcome-header" style="margin-bottom: 2rem;">
             <div>
-                <h2 class="section-title" style="margin-bottom: 0;">Welcome, <span id="principalName"
-                        style="color: var(--primary);">Principal</span>!</h2>
                 <h2 class="section-title" style="margin-bottom: 0;">
                     Welcome, <span id="principalName" style="color: var(--primary);">Principal</span>!
                 </h2>
@@ -186,7 +184,6 @@
         const profileForm = document.getElementById("profileForm");
 
         closeWorkloadModalBtn.onclick = () => workloadModal.style.display = "none";
-        window.onclick = (e) => { if (e.target == workloadModal) workloadModal.style.display = "none"; };
         closeProfileModalBtn.onclick = () => profileModal.style.display = "none";
 
         window.onclick = (e) => { 
