@@ -4,75 +4,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Burnout Risk Assessment</title>
+    <title>Meraki System | Predictive Burnout Risk Profiling</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Specific layouts for clean Likert scale forms */
-        .rubric-section {
-            margin-bottom: 2.5rem;
-        }
-
-        .rubric-header {
-            border-bottom: 2px solid var(--accent);
-            color: var(--primary);
-            padding-bottom: 0.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .question-group {
-            margin-bottom: 1.5rem;
-            background: var(--bg-body);
-            padding: 1.5rem;
-            border-radius: 8px;
-            border-left: 4px solid var(--primary-light);
-        }
-
-        .question-group label {
-            display: block;
-            font-weight: 600;
-            color: var(--text-main);
-            margin-bottom: 0.75rem;
-            font-size: 0.95rem;
-        }
-
-        .question-group select,
-        .question-group input {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
-            font-family: inherit;
-            font-size: 0.95rem;
-            background-color: var(--bg-card);
-            color: var(--text-main);
-        }
-
-        .question-group input[readonly] {
-            background-color: #e2e8f0;
-            cursor: not-allowed;
-            border-color: #cbd5e1;
-            color: var(--text-muted);
-            font-weight: 600;
-        }
-
-        .subcategory {
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            font-weight: 700;
-            color: var(--text-muted);
-            margin-bottom: 1rem;
-            letter-spacing: 0.5px;
-        }
-
-        .assigned-summary-box {
-            background-color: #eff6ff;
-            border: 1px solid #bfdbfe;
-            padding: 0.85rem;
-            border-radius: 6px;
-            margin-bottom: 1rem;
-            font-size: 0.9rem;
-            color: #1e3a8a;
-        }
+        .rubric-section { margin-bottom: 2.5rem; }
+        .rubric-header { border-bottom: 2px solid var(--accent); color: var(--primary); padding-bottom: 0.5rem; margin-bottom: 1.5rem; }
+        .question-group { margin-bottom: 1.5rem; background: var(--bg-body); padding: 1.5rem; border-radius: 8px; border-left: 4px solid var(--primary-light); }
+        .question-group label { display: block; font-weight: 600; color: var(--text-main); margin-bottom: 0.75rem; font-size: 0.95rem; }
+        .question-group select { width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit; font-size: 0.95rem; background-color: var(--bg-card); color: var(--text-main); }
+        .subcategory { font-size: 0.85rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted); margin-bottom: 1rem; letter-spacing: 0.5px; }
+        .disclaimer-box { background-color: #fef3c7; border: 1px solid #fde68a; padding: 1rem; border-radius: 6px; font-size: 0.85rem; color: #92400e; margin-bottom: 2rem; }
     </style>
 </head>
 
@@ -80,8 +21,8 @@
 
     <header class="navbar">
         <div class="logo-container">
-            <span class="logo-icon">🔵🔴🟡</span>
-            <h1 class="logo">Kandili</h1>
+            <span class="logo-icon">💠</span>
+            <h1 class="logo">Meraki System</h1>
         </div>
         <nav>
             <ul class="nav-links">
@@ -93,208 +34,102 @@
     <main class="profile-main">
         <div class="profile-card">
             <div class="profile-card-header">
-                <h2>Official Workload & Wellness Pulse</h2>
+                <h2>Predictive Burnout Risk Profiling Engine</h2>
             </div>
 
             <div class="profile-card-body">
-                <p style="text-align: center; color: var(--text-muted); margin-bottom: 2rem;">
-                    This 120-point assessment integrates official DepEd structural metrics with the Maslach Burnout
-                    Inventory dimensions.
-                </p>
+                <div class="disclaimer-box">
+                    <strong>Academic & Clinical Disclaimer:</strong> This module utilizes the Seibt & Kreuzfeld (2021) multiple linear regression model to <em>predict</em> the likelihood of burnout risk based on established operational and psychological stressors (explaining ~29% of risk variance). It does not administer the MBI-GS and should be used as a systemic profiling estimate, not a clinical diagnosis.
+                </div>
 
                 <form id="assessmentForm">
 
                     <div class="rubric-section">
-                        <h3 class="rubric-header">PART A: Structural Workload (eSF7 Data)</h3>
-
-                        <div class="question-group">
-                            <label>1. Total Instructional Minutes per week:</label>
-                            <input type="number" id="a1_mins" value="0" readonly required>
-                            <small style="color: var(--primary); font-weight: 600; display: block; margin-top: 0.5rem;">
-                                🔒 Automatically synced with official DepEd workloads assigned by your Principal.
-                                Baseline is 1,800 mins.
-                            </small>
+                        <h3 class="rubric-header">Psychosocial & Operational Stressors</h3>
+                        
+                        <div class="subcategory">1. Operational Effort (ERI-Q Short)</div>
+                        <p style="font-size: 0.85rem; margin-bottom: 1rem;">Scale: 1 = Strongly Disagree to 5 = Strongly Agree</p>
+                        <div class="question-group" id="effort-group">
+                            <label>I have constant time pressure due to a heavy workload.</label>
+                            <select class="eri-effort" required><option value="1">1 - Strongly Disagree</option><option value="2">2 - Disagree</option><option value="3">3 - Neutral</option><option value="4">4 - Agree</option><option value="5">5 - Strongly Agree</option></select>
+                            
+                            <label style="margin-top: 1rem;">I have many interruptions and disturbances while performing my job.</label>
+                            <select class="eri-effort" required><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>
+                            
+                            <label style="margin-top: 1rem;">Over the past few years, my job has become more and more demanding.</label>
+                            <select class="eri-effort" required><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>
                         </div>
 
-                        <div class="question-group">
-                            <label>2. Number of distinct subjects/academic preparations:</label>
-                            <input type="number" id="a2_preps" value="1" min="1" required>
-                            <small style="color: var(--text-muted); display: block; margin-top: 0.5rem;">
-                                Pre-loaded based on total assigned class sections. Adjust if multiple sections share an
-                                identical academic preparation.
-                            </small>
+                        <div class="subcategory">2. Systemic & Interpersonal Rewards (ERI-Q Short)</div>
+                        <p style="font-size: 0.85rem; margin-bottom: 1rem;">Scale: 1 = Strongly Disagree to 5 = Strongly Agree</p>
+                        <div class="question-group" id="reward-group">
+                            <label>I receive the respect I deserve from my superiors.</label>
+                            <select class="eri-reward" required><option value="1">1 - Strongly Disagree</option><option value="2">2 - Disagree</option><option value="3">3 - Neutral</option><option value="4">4 - Agree</option><option value="5">5 - Strongly Agree</option></select>
+                            
+                            <label style="margin-top: 1rem;">I receive the respect I deserve from my colleagues.</label>
+                            <select class="eri-reward" required><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>
+                            
+                            <label style="margin-top: 1rem;">I experience adequate support in difficult situations.</label>
+                            <select class="eri-reward" required><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>
+                            
+                            <label style="margin-top: 1rem;">I am treated fairly at work.</label>
+                            <select class="eri-reward" required><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>
+                            
+                            <label style="margin-top: 1rem;">My job promotion prospects are good.</label>
+                            <select class="eri-reward" required><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>
+                            
+                            <label style="margin-top: 1rem;">My job security is excellent.</label>
+                            <select class="eri-reward" required><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>
+                            
+                            <label style="margin-top: 1rem;">My current salary adequately reflects my efforts.</label>
+                            <select class="eri-reward" required><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select>
                         </div>
 
+                        <div class="subcategory">3. Inability to Recover (Validated FABA Scale)</div>
+                        <p style="font-size: 0.85rem; margin-bottom: 1rem;">Scale: 1 = Strongly Disagree to 4 = Strongly Agree</p>
                         <div class="question-group">
-                            <label>3. Heaviest Administrative or Ancillary Role currently held:</label>
-
-                            <div class="assigned-summary-box" id="assignedRolesContainer">
-                                <strong>Assigned Server Designations:</strong> Loading structural data...
-                            </div>
-
-                            <select id="a3_admin" required>
-                                <option value="0">None</option>
-                                <option value="5">Light Role (e.g., Club Moderator, Committee Member)</option>
-                                <option value="10">Medium Role (e.g., Class Adviser)</option>
-                                <option value="20">Heavy Role (e.g., Grade Level Chair, LIS Coordinator)</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="rubric-section">
-                        <h3 class="rubric-header">PART B: Monthly Wellness Pulse (MBI)</h3>
-                        <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.5rem;">Rate how often
-                            you experience the following (1 = Never, 2 = Sometimes, 3 = Often, 4 = Always).</p>
-
-                        <div class="subcategory">Resources (Teacher Efficacy)</div>
-                        <div class="question-group">
-                            <label>1. I have a reputation as an efficient and competent teacher among my
-                                colleagues.</label>
-                            <select class="mbi-reverse" required>
-                                <option value="1">1 - Never</option>
-                                <option value="2">2 - Sometimes</option>
-                                <option value="3">3 - Often</option>
-                                <option value="4">4 - Always</option>
-                            </select>
-
-                            <label style="margin-top: 1rem;">2. I feel I am a valuable person in my teaching
-                                profession.</label>
-                            <select class="mbi-reverse" required>
-                                <option value="1">1 - Never</option>
-                                <option value="2">2 - Sometimes</option>
-                                <option value="3">3 - Often</option>
-                                <option value="4">4 - Always</option>
-                            </select>
-
-                            <label style="margin-top: 1rem;">3. I am able to motivate students who show low interest in
-                                schoolwork.</label>
-                            <select class="mbi-reverse" required>
-                                <option value="1">1 - Never</option>
-                                <option value="2">2 - Sometimes</option>
-                                <option value="3">3 - Often</option>
-                                <option value="4">4 - Always</option>
-                            </select>
+                            <label>It is hard for me to relax after a working day.</label>
+                            <select class="ir-item" required><option value="1">1 - Strongly Disagree</option><option value="2">2 - Disagree</option><option value="3">3 - Agree</option><option value="4">4 - Strongly Agree</option></select>
+                            <label style="margin-top: 0.5rem;">After work it takes a long time before I can finally switch off.</label>
+                            <select class="ir-item" required><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select>
+                            <label style="margin-top: 0.5rem;">After the weekend I rarely feel fully recovered.</label>
+                            <select class="ir-item" required><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select>
+                            <label style="margin-top: 0.5rem;">When I start working again I am usually still exhausted.</label>
+                            <select class="ir-item" required><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select>
+                            <label style="margin-top: 0.5rem;">I find it difficult to recover from physical exhaustion after work.</label>
+                            <select class="ir-item" required><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select>
+                            <label style="margin-top: 0.5rem;">In my free time I hardly have any energy to do anything else.</label>
+                            <select class="ir-item" required><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select>
                         </div>
 
-                        <div class="subcategory">Demands (Emotional Exhaustion)</div>
+                        <div class="subcategory">4. Overcommitment (Validated ERI-Q Intrinsic Scale)</div>
+                        <p style="font-size: 0.85rem; margin-bottom: 1rem;">Scale: 1 = Strongly Disagree to 4 = Strongly Agree</p>
                         <div class="question-group">
-                            <label>4. I feel emotionally exhausted from my teaching and administrative duties.</label>
-                            <select class="mbi-standard" required>
-                                <option value="1">1 - Never</option>
-                                <option value="2">2 - Sometimes</option>
-                                <option value="3">3 - Often</option>
-                                <option value="4">4 - Always</option>
+                            <label>I get easily overwhelmed by time pressures at work.</label>
+                            <select class="oc-item" required><option value="1">1 - Strongly Disagree</option><option value="2">2 - Disagree</option><option value="3">3 - Agree</option><option value="4">4 - Strongly Agree</option></select>
+                            <label style="margin-top: 0.5rem;">As soon as I get up in the morning I start thinking about work problems.</label>
+                            <select class="oc-item" required><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select>
+                            
+                            <label style="margin-top: 0.5rem; color: #1e3a8a;">When I get home, I can easily relax and 'switch off' work.</label>
+                            <select class="oc-item-reverse" required>
+                                <option value="1">1 - Strongly Disagree</option>
+                                <option value="2">2 - Disagree</option>
+                                <option value="3">3 - Agree</option>
+                                <option value="4">4 - Strongly Agree</option>
                             </select>
 
-                            <label style="margin-top: 1rem;">5. I feel tired when I wake up in the morning and have to
-                                face another day at work.</label>
-                            <select class="mbi-standard" required>
-                                <option value="1">1 - Never</option>
-                                <option value="2">2 - Sometimes</option>
-                                <option value="3">3 - Often</option>
-                                <option value="4">4 - Always</option>
-                            </select>
-
-                            <label style="margin-top: 1rem;">6. Working with people (students, parents, co-workers) all
-                                day is really weighing me down.</label>
-                            <select class="mbi-standard" required>
-                                <option value="1">1 - Never</option>
-                                <option value="2">2 - Sometimes</option>
-                                <option value="3">3 - Often</option>
-                                <option value="4">4 - Always</option>
-                            </select>
-                        </div>
-
-                        <div class="subcategory">Cynicism (Depersonalization)</div>
-                        <div class="question-group">
-                            <label>7. I am worried that this job is hardening me emotionally.</label>
-                            <select class="mbi-standard" required>
-                                <option value="1">1 - Never</option>
-                                <option value="2">2 - Sometimes</option>
-                                <option value="3">3 - Often</option>
-                                <option value="4">4 - Always</option>
-                            </select>
-
-                            <label style="margin-top: 1rem;">8. I feel frustrated with the systemic demands of my
-                                job.</label>
-                            <select class="mbi-standard" required>
-                                <option value="1">1 - Never</option>
-                                <option value="2">2 - Sometimes</option>
-                                <option value="3">3 - Often</option>
-                                <option value="4">4 - Always</option>
-                            </select>
-
-                            <label style="margin-top: 1rem;">9. I feel disconnected from the students I am supposed to
-                                be helping.</label>
-                            <select class="mbi-standard" required>
-                                <option value="1">1 - Never</option>
-                                <option value="2">2 - Sometimes</option>
-                                <option value="3">3 - Often</option>
-                                <option value="4">4 - Always</option>
-                            </select>
-                        </div>
-
-                        <div class="subcategory">Efficacy Drop (Reduced Personal Accomplishment)</div>
-                        <div class="question-group">
-                            <label>10. I can't easily create a relaxed atmosphere with my students.</label>
-                            <select class="mbi-standard" required>
-                                <option value="1">1 - Never</option>
-                                <option value="2">2 - Sometimes</option>
-                                <option value="3">3 - Often</option>
-                                <option value="4">4 - Always</option>
-                            </select>
-
-                            <label style="margin-top: 1rem;">11. I don't feel happy or fulfilled after working with my
-                                students.</label>
-                            <select class="mbi-standard" required>
-                                <option value="1">1 - Never</option>
-                                <option value="2">2 - Sometimes</option>
-                                <option value="3">3 - Often</option>
-                                <option value="4">4 - Always</option>
-                            </select>
-
-                            <label style="margin-top: 1rem;">12. I feel I haven't done many valuable things in this job
-                                lately.</label>
-                            <select class="mbi-standard" required>
-                                <option value="1">1 - Never</option>
-                                <option value="2">2 - Sometimes</option>
-                                <option value="3">3 - Often</option>
-                                <option value="4">4 - Always</option>
-                            </select>
-
-                            <label style="margin-top: 1rem;">13. I struggle to handle emotional issues calmly in my
-                                classroom.</label>
-                            <select class="mbi-standard" required>
-                                <option value="1">1 - Never</option>
-                                <option value="2">2 - Sometimes</option>
-                                <option value="3">3 - Often</option>
-                                <option value="4">4 - Always</option>
-                            </select>
-
-                            <label style="margin-top: 1rem;">14. I feel students are blaming me for some of their
-                                problems.</label>
-                            <select class="mbi-standard" required>
-                                <option value="1">1 - Never</option>
-                                <option value="2">2 - Sometimes</option>
-                                <option value="3">3 - Often</option>
-                                <option value="4">4 - Always</option>
-                            </select>
-
-                            <label style="margin-top: 1rem;">15. I can't easily understand how my students feel about
-                                things.</label>
-                            <select class="mbi-standard" required>
-                                <option value="1">1 - Never</option>
-                                <option value="2">2 - Sometimes</option>
-                                <option value="3">3 - Often</option>
-                                <option value="4">4 - Always</option>
-                            </select>
+                            <label style="margin-top: 0.5rem;">People close to me say I sacrifice too much for my job.</label>
+                            <select class="oc-item" required><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select>
+                            <label style="margin-top: 0.5rem;">Work rarely lets me go, it is still on my mind when I go to bed.</label>
+                            <select class="oc-item" required><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select>
+                            <label style="margin-top: 0.5rem;">If I postpone something that I was supposed to do today I'll have trouble sleeping at night.</label>
+                            <select class="oc-item" required><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select>
                         </div>
                     </div>
 
                     <div class="profile-actions" style="margin-top: 1rem;">
                         <button type="submit" class="save-profile-btn"
-                            style="width: 100%; padding: 1.25rem; font-size: 1.2rem;">Calculate 120-Point
-                            Score</button>
+                            style="width: 100%; padding: 1.25rem; font-size: 1.2rem;">Execute Predictive Matrix</button>
                     </div>
 
                 </form>
@@ -303,13 +138,11 @@
     </main>
 
     <script type="module">
-        // Import explicit absolute constant mapping alongside client instances
         import { supabase, supabaseUrl, supabaseAnonKey } from "./Meraki_Supabase.js";
 
         let currentUser = null;
         let globalAccessToken = null;
 
-        // Session validation loop & structural baseline mapping via native transport pipelines
         supabase.auth.onAuthStateChange(async (event, session) => {
             if (!session) {
                 window.location.replace("login.html");
@@ -317,65 +150,8 @@
             }
             currentUser = session.user;
             globalAccessToken = session.access_token;
-
-            try {
-                // Fetch complete active profile parameters straight from PostgreSQL edge nodes
-                const baselineEndpoint = `${supabaseUrl}/rest/v1/profiles?id=eq.${currentUser.id}&select=*`;
-
-                const res = await fetch(baselineEndpoint, {
-                    method: 'GET',
-                    headers: {
-                        'apikey': supabaseAnonKey,
-                        'Authorization': `Bearer ${globalAccessToken}`
-                    },
-                    cache: 'no-store'
-                });
-
-                if (res.ok) {
-                    const profileRows = await res.json();
-                    if (profileRows && profileRows.length > 0) {
-                        const profileData = profileRows[0];
-
-                        // 1. Sync Part A Q1: Enforce Principal-assigned Instructional Minutes directly
-                        const assignedMinutes = profileData.totalInstructionalMinutes || 0;
-                        document.getElementById('a1_mins').value = assignedMinutes > 0 ? assignedMinutes : 1800;
-
-                        // 2. Sync Part A Q2: Derive preparation estimates off active teaching load constraints
-                        const structuralSections = profileData.teachingLoad || [];
-                        if (structuralSections.length > 0) {
-                            document.getElementById('a2_preps').value = Math.max(1, Math.min(structuralSections.length, 4));
-                        }
-
-                        // 3. Sync Part A Q3 Summary layout: Expose assigned server arrays transparently
-                        const adminRolesList = profileData.adminRoles || [];
-                        const ancillaryList = profileData.ancillaryDuties || [];
-                        const combinedRoles = [...adminRolesList, ...ancillaryList];
-
-                        const summaryContainer = document.getElementById('assignedRolesContainer');
-                        if (combinedRoles.length > 0) {
-                            summaryContainer.innerHTML = `<strong>Assigned Server Designations:</strong> ${combinedRoles.join(', ')}`;
-
-                            // Automatically infer suitable baseline drop-down selections if heavily structured
-                            const rolesString = combinedRoles.join(' ').toLowerCase();
-                            const adminSelectNode = document.getElementById('a3_admin');
-                            if (rolesString.includes('chair') || rolesString.includes('coordinator') || rolesString.includes('head')) {
-                                adminSelectNode.value = "20"; // Heavy default mapping
-                            } else if (rolesString.includes('adviser')) {
-                                adminSelectNode.value = "10"; // Medium default mapping
-                            } else {
-                                adminSelectNode.value = "5"; // Light default mapping
-                            }
-                        } else {
-                            summaryContainer.innerHTML = `<strong>Assigned Server Designations:</strong> No administrative duties registered server-side.`;
-                        }
-                    }
-                }
-            } catch (err) {
-                console.error("Baseline extraction exception:", err);
-            }
         });
 
-        // Expert System Computation backed by direct REST mutation logic
         document.getElementById('assessmentForm').addEventListener('submit', async function (e) {
             e.preventDefault();
 
@@ -386,58 +162,56 @@
 
             const btn = document.querySelector('.save-profile-btn');
             const originalText = btn.innerHTML;
-            btn.innerHTML = 'Executing Expert System Algorithm... ⏳';
+            btn.innerHTML = 'Executing Profiling Engine... ⚙️';
             btn.style.opacity = '0.7';
             btn.disabled = true;
 
-            // --- CALCULATE PART A (Max 60 pts) ---
-            let partAScore = 0;
-
-            const mins = parseInt(document.getElementById('a1_mins').value) || 0;
-            if (mins > 1800) {
-                const overloadBlocks = Math.floor((mins - 1800) / 60);
-                partAScore += Math.min(20, overloadBlocks * 10);
-            }
-
-            const preps = parseInt(document.getElementById('a2_preps').value) || 1;
-            if (preps > 2) {
-                const extraPreps = preps - 2;
-                partAScore += Math.min(15, extraPreps * 5);
-            }
-
-            const adminPoints = parseInt(document.getElementById('a3_admin').value) || 0;
-            partAScore += adminPoints;
-
-            partAScore = Math.min(60, partAScore);
-
-            // --- CALCULATE PART B (Max 60 pts) ---
-            let partBScore = 0;
-
-            const reverseItems = document.querySelectorAll('.mbi-reverse');
-            reverseItems.forEach(item => {
-                partBScore += (5 - parseInt(item.value));
+            // 1. Calculate ER Ratio
+            let effortSum = 0;
+            document.querySelectorAll('.eri-effort').forEach(item => {
+                effortSum += parseInt(item.value);
             });
 
-            const standardItems = document.querySelectorAll('.mbi-standard');
-            standardItems.forEach(item => {
-                partBScore += parseInt(item.value);
+            let rewardSum = 0;
+            document.querySelectorAll('.eri-reward').forEach(item => {
+                rewardSum += parseInt(item.value);
             });
 
-            // --- PART C: FINAL CALCULATION ---
-            const totalScore = partAScore + partBScore;
+            const erRatio = effortSum / (rewardSum * 0.54); 
 
+            // 2. Calculate IR Score (FABA)
+            let irSum = 0;
+            document.querySelectorAll('.ir-item').forEach(item => {
+                irSum += parseInt(item.value);
+            });
+
+            // 3. Calculate OC Score (ERI-Q) with Construct Validity Reverse Coding
+            let ocSum = 0;
+            document.querySelectorAll('.oc-item').forEach(item => {
+                ocSum += parseInt(item.value);
+            });
+            
+            // Mathematically invert the reverse-scored item (1->4, 2->3, 3->2, 4->1)
+            const reverseNode = document.querySelector('.oc-item-reverse');
+            const reverseValue = parseInt(reverseNode.value);
+            ocSum += (5 - reverseValue); 
+
+            // 4. Multiple Linear Regression Formula (Seibt & Kreuzfeld)
+            // Risk = -0.58 + (0.24 * ER) + (0.21 * IR) + (0.14 * OC)
+            const riskScore = -0.58 + (0.24 * erRatio) + (0.21 * irSum) + (0.14 * ocSum);
+
+            // 5. Categorical Profiling Matrix
             let calculatedRisk = "Low";
             let triggerReviewFlag = false;
 
-            if (totalScore >= 91) {
+            if (riskScore >= 3.50) {
                 calculatedRisk = "High";
-                triggerReviewFlag = true; // High classification initiates workload review triggers natively
-            } else if (totalScore >= 56) {
+                triggerReviewFlag = true; 
+            } else if (riskScore >= 1.50) {
                 calculatedRisk = "Moderate";
             }
 
             try {
-                // Execute un-deadlockable native PostgREST mutation payload
                 const targetCommitEndpoint = `${supabaseUrl}/rest/v1/profiles?id=eq.${currentUser.id}`;
 
                 const response = await fetch(targetCommitEndpoint, {
@@ -447,11 +221,11 @@
                         'apikey': supabaseAnonKey,
                         'Authorization': `Bearer ${globalAccessToken}`
                     },
-                    cache: 'no-store',
                     body: JSON.stringify({
-                        assessmentScore: totalScore,
-                        partAScore: partAScore,
-                        partBScore: partBScore,
+                        assessmentScore: parseFloat(riskScore.toFixed(2)), 
+                        erRatio: parseFloat(erRatio.toFixed(2)),
+                        irScore: irSum,
+                        ocScore: ocSum,
                         riskLevel: calculatedRisk,
                         needsLoadRebalance: triggerReviewFlag,
                         lastAssessmentDate: new Date().toISOString()
@@ -463,7 +237,6 @@
                     throw new Error(serverRejection.message || `Database validation exception (HTTP ${response.status})`);
                 }
 
-                // Redirect instantly back to dashboard display metrics
                 window.location.href = 'dashboard.html';
 
             } catch (error) {
