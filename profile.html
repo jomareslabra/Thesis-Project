@@ -192,20 +192,28 @@
 
         async function loadProfile(uid) {
             try {
-                // Read queries execute perfectly through standard client calls
-                const { data: profile, error } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', uid)
-                    .single();
+                // READ OPERATION - Switched to native fetch with no-store to prevent stale loads from browser cache
+                const fetchEndpoint = `${supabaseUrl}/rest/v1/profiles?id=eq.${uid}&select=*`;
+                const response = await fetch(fetchEndpoint, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': supabaseAnonKey,
+                        'Authorization': `Bearer ${globalAccessToken}`
+                    },
+                    cache: 'no-store'
+                });
 
-                if (error || !profile) {
+                if (!response.ok) throw new Error("Failed to retrieve profile data.");
+                const profiles = await response.json();
+
+                if (!profiles || profiles.length === 0) {
                     console.error("Error loading profile:", error);
                     return;
                 }
 
                 // Render metrics cleanly
-                updateInterfaceNodes(profile);
+                updateInterfaceNodes(profiles[0]);
 
             } catch (err) {
                 console.error("Profile load error:", err);
@@ -297,6 +305,7 @@
                         'apikey': supabaseAnonKey, // 2. Consume pure exported Key string directly
                         'Authorization': `Bearer ${globalAccessToken}`
                     },
+                    cache: 'no-store',
                     body: JSON.stringify({
                         name: name,
                         employeeId: employeeId || null,

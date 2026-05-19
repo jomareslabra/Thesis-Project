@@ -59,6 +59,7 @@
         </div>
         <nav>
             <ul class="nav-links">
+                <li><a href="#" id="editPrincipalProfile">Edit Profile</a></li>
                 <li><a href="index.html" class="login-btn">Logout</a></li>
             </ul>
         </nav>
@@ -69,6 +70,9 @@
             <div>
                 <h2 class="section-title" style="margin-bottom: 0;">Welcome, <span id="principalName"
                         style="color: var(--primary);">Principal</span>!</h2>
+                <h2 class="section-title" style="margin-bottom: 0;">
+                    Welcome, <span id="principalName" style="color: var(--primary);">Principal</span>!
+                </h2>
                 <p style="color: var(--text-muted); font-weight: 500;">School Overview Dashboard</p>
             </div>
         </div>
@@ -151,6 +155,19 @@
         </div>
     </div>
 
+    <!-- Profile Edit Modal -->
+    <div id="profileModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="closeProfileModal">&times;</span>
+            <h2 style="color: #3b5ca0; margin-bottom: 1rem;">Principal Profile Settings</h2>
+            <form id="profileForm">
+                <label>Display Name:</label>
+                <input type="text" id="principalDisplayName" required>
+                <button type="submit" class="save-profile-btn" style="margin-top: 1.5rem;">Update Name</button>
+            </form>
+        </div>
+    </div>
+
     <script type="module">
         // Import URL and Key directly alongside the client instance
         import { supabase, supabaseUrl, supabaseAnonKey } from "./Meraki_Supabase.js";
@@ -163,8 +180,25 @@
         const closeWorkloadModalBtn = document.getElementById("closeWorkloadModal");
         const workloadForm = document.getElementById("workloadForm");
 
+        const profileModal = document.getElementById("profileModal");
+        const editProfileBtn = document.getElementById("editPrincipalProfile");
+        const closeProfileModalBtn = document.getElementById("closeProfileModal");
+        const profileForm = document.getElementById("profileForm");
+
         closeWorkloadModalBtn.onclick = () => workloadModal.style.display = "none";
         window.onclick = (e) => { if (e.target == workloadModal) workloadModal.style.display = "none"; };
+        closeProfileModalBtn.onclick = () => profileModal.style.display = "none";
+
+        window.onclick = (e) => { 
+            if (e.target == workloadModal) workloadModal.style.display = "none";
+            if (e.target == profileModal) profileModal.style.display = "none";
+        };
+
+        editProfileBtn.onclick = (e) => {
+            e.preventDefault();
+            document.getElementById("principalDisplayName").value = document.getElementById("principalName").textContent;
+            profileModal.style.display = "flex";
+        };
 
         supabase.auth.onAuthStateChange(async (event, session) => {
             if (!session) {
@@ -184,7 +218,8 @@
                         'Content-Type': 'application/json',
                         'apikey': supabaseAnonKey,
                         'Authorization': `Bearer ${globalAccessToken}`
-                    }
+                    },
+                    cache: 'no-store'
                 });
 
                 if (!authResponse.ok) throw new Error("Failed to verify admin profile credentials.");
@@ -223,7 +258,8 @@
                         'Content-Type': 'application/json',
                         'apikey': supabaseAnonKey,
                         'Authorization': `Bearer ${globalAccessToken}`
-                    }
+                    },
+                    cache: 'no-store'
                 });
 
                 if (!response.ok) {
@@ -355,6 +391,7 @@
                         'apikey': supabaseAnonKey,
                         'Authorization': `Bearer ${globalAccessToken}`
                     },
+                    cache: 'no-store',
                     body: JSON.stringify({
                         teachingLoad: teachingArray,
                         adminRoles: adminArray,
@@ -381,6 +418,41 @@
                 alert("Transaction Denied:\n" + err.message);
             } finally {
                 saveBtn.textContent = originalText;
+                saveBtn.disabled = false;
+            }
+        };
+
+        profileForm.onsubmit = async function (e) {
+            e.preventDefault();
+            const saveBtn = profileForm.querySelector('button[type="submit"]');
+            const newName = document.getElementById("principalDisplayName").value.trim();
+            
+            saveBtn.textContent = "Updating... ⏳";
+            saveBtn.disabled = true;
+
+            try {
+                const patchEndpoint = `${supabaseUrl}/rest/v1/profiles?id=eq.${currentUser.id}`;
+                const response = await fetch(patchEndpoint, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': supabaseAnonKey,
+                        'Authorization': `Bearer ${globalAccessToken}`
+                    },
+                    body: JSON.stringify({ name: newName })
+                });
+
+                if (!response.ok) throw new Error("Update failed.");
+
+                document.getElementById("principalName").textContent = newName;
+                profileModal.style.display = "none";
+                alert("Profile name updated successfully!");
+
+            } catch (err) {
+                console.error("Profile update error:", err);
+                alert("Error updating profile.");
+            } finally {
+                saveBtn.textContent = "Update Name";
                 saveBtn.disabled = false;
             }
         };

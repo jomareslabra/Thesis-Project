@@ -129,7 +129,8 @@
                         'Content-Type': 'application/json',
                         'apikey': supabaseAnonKey,
                         'Authorization': `Bearer ${globalAccessToken}`
-                    }
+                    },
+                    cache: 'no-store'
                 });
 
                 if (!response.ok) {

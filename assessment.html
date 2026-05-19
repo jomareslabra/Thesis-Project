@@ -327,7 +327,8 @@
                     headers: {
                         'apikey': supabaseAnonKey,
                         'Authorization': `Bearer ${globalAccessToken}`
-                    }
+                    },
+                    cache: 'no-store'
                 });
 
                 if (res.ok) {
@@ -446,6 +447,7 @@
                         'apikey': supabaseAnonKey,
                         'Authorization': `Bearer ${globalAccessToken}`
                     },
+                    cache: 'no-store',
                     body: JSON.stringify({
                         assessmentScore: totalScore,
                         partAScore: partAScore,
